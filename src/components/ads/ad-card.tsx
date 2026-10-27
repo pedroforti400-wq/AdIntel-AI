@@ -1,17 +1,18 @@
 import Link from "next/link";
 import { CalendarDays, Clock3 } from "lucide-react";
 
-import { DemoBadge } from "@/components/layout/demo-badge";
 import { Card } from "@/components/ui/card";
 import type { AdView } from "@/data/repositories/types";
-import { daysRunning } from "@/modules/ads/metrics";
+import { knownDaysRunning } from "@/modules/ads/metrics";
 import { PLATFORM_LABELS, formatDate, formatDays } from "@/lib/format";
 import { AdStatusBadge } from "./ad-status-badge";
 import { CreativePlaceholder } from "./creative-placeholder";
+import { SourceBadge } from "./source-badge";
 
-export function AdCard({ view, dataReferencia }: { view: AdView; dataReferencia: string }) {
+// dataReferencia é mantida na assinatura; o tempo no ar usa as datas do próprio anúncio.
+export function AdCard({ view }: { view: AdView; dataReferencia?: string }) {
   const { anuncio, anunciante } = view;
-  const dias = daysRunning(anuncio, dataReferencia);
+  const dias = knownDaysRunning(anuncio);
 
   return (
     <Card className="group relative gap-3 py-0 transition-shadow hover:shadow-md">
@@ -53,7 +54,7 @@ export function AdCard({ view, dataReferencia }: { view: AdView; dataReferencia:
             )}
           </div>
           <div className="flex items-center justify-between pt-1">
-            {anuncio.isDemo ? <DemoBadge /> : <span>{view.fonte.nome}</span>}
+            <SourceBadge ad={anuncio} />
             {/* O link cobre o cartão inteiro (after:inset-0) para facilitar o clique. */}
             <Link
               href={`/biblioteca/${anuncio.id}`}

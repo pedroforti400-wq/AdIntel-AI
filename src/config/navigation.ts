@@ -49,7 +49,7 @@ export const NAVIGATION: NavGroup[] = [
   {
     titulo: "Dados",
     itens: [
-      { titulo: "Importações", href: "/importacoes", icone: Upload, emBreve: true },
+      { titulo: "Importações", href: "/importacoes", icone: Upload },
       { titulo: "Fontes de dados", href: "/fontes", icone: Database },
       { titulo: "Alertas", href: "/agendamentos", icone: BellRing, emBreve: true },
     ],

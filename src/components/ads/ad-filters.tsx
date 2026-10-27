@@ -108,21 +108,41 @@ export function AdFiltersForm({
             </Field>
 
             <Field label="País" htmlFor="f-pais" hint={can("pais") ? undefined : unsupportedHint}>
-              <NativeSelect id="f-pais" name={can("pais") ? "pais" : undefined} disabled={!can("pais")} defaultValue="">
+              <NativeSelect
+                id="f-pais"
+                name={can("pais") ? "pais" : undefined}
+                disabled={!can("pais")}
+                defaultValue={can("pais") ? filters.pais : ""}
+              >
                 <option value="">Todos os países</option>
+                {can("pais") &&
+                  options.paises.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
               </NativeSelect>
             </Field>
           </div>
 
-          <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-end sm:justify-between">
-            <Field label="Ordenar por" htmlFor="f-ordem" className="sm:w-56">
-              <NativeSelect id="f-ordem" name="ordem" defaultValue={filters.ordem}>
-                {SORT_OPTIONS.map((o) => (
-                  <option key={o} value={o}>{SORT_LABELS[o]}</option>
-                ))}
-              </NativeSelect>
-            </Field>
-            <div className="flex gap-2">
+          <div className="flex flex-col gap-3 border-t pt-4 xl:flex-row xl:items-end xl:justify-between">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:flex">
+
+              <Field label="Fonte dos dados" htmlFor="f-fonte" className="xl:w-56">
+                <NativeSelect id="f-fonte" name="fonte" defaultValue={filters.fonte}>
+                  <option value="">Todas as fontes</option>
+                  {options.fontes.map((f) => (
+                    <option key={f.id} value={f.id}>{f.nome}</option>
+                  ))}
+                </NativeSelect>
+              </Field>
+              <Field label="Ordenar por" htmlFor="f-ordem" className="xl:w-56">
+                <NativeSelect id="f-ordem" name="ordem" defaultValue={filters.ordem}>
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{SORT_LABELS[o]}</option>
+                  ))}
+                </NativeSelect>
+              </Field>
+            </div>
+            <div className="flex justify-end gap-2">
               <Button asChild variant="ghost" size="sm">
                 <Link href={action}>Limpar filtros</Link>
               </Button>

@@ -33,7 +33,7 @@ export default function ExplorarPage(props: PageProps<"/explorar">) {
 async function ExplorerResults({ searchParams }: Pick<PageProps<"/explorar">, "searchParams">) {
   const filters = parseFilters(await searchParams);
   const repo = getRepository();
-  const [result, options] = await Promise.all([repo.searchAds(filters), repo.getFilterOptions()]);
+  const [result, options] = await Promise.all([repo.searchAds(filters), repo.getFilterOptions(filters.fonte)]);
   const { pagina } = result;
   const params = filtersToSearchParams({ ...filters, pagina: 1 });
   const activeCount = countActiveFilters(filters);

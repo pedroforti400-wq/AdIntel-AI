@@ -1,0 +1,4 @@
+id_anuncio,anunciante,nicho,texto,titulo,cta,link,formato,plataformas,paises,data_inicio,data_fim,status
+EX-001,Loja Exemplo (fictícia),Moda,"Coleção nova com até 30% de desconto. Aproveite!",Coleção de verão,Comprar agora,https://exemplo.com.br/colecao,imagem,"Facebook, Instagram",BR,2026-10-01,,ativo
+EX-002,Loja Exemplo (fictícia),Moda,"Frete grátis em todo o Brasil, só esta semana.",Frete grátis,Saiba mais,https://exemplo.com.br/frete,video,Instagram,BR,15/09/2026,30/09/2026,encerrado
+EX-003,Academia Modelo (fictícia),Fitness,"Treine em casa com acompanhamento profissional.",Treino em casa,Cadastre-se,,carrossel,Facebook,BR,2026-10-10,,

@@ -30,6 +30,18 @@ export function daysRunning(ad: Ad, referenceDate: string): number | null {
   return Math.max(0, Math.round(ms / DAY_MS)) + 1;
 }
 
+/**
+ * Dias em veiculação usando só o que se sabe do próprio anúncio:
+ * até a data de encerramento, ou até a última coleta se ele estava ativo.
+ * Se a situação é desconhecida e não há data de fim, retorna null (não inventamos).
+ */
+export function knownDaysRunning(ad: Ad): number | null {
+  if (!ad.dataInicio) return null;
+  if (ad.dataFim) return daysRunning(ad, ad.dataFim);
+  if (ad.ativo === true) return daysRunning(ad, ad.ultimaColeta);
+  return null;
+}
+
 export interface WeeklyPoint {
   /** Início da semana (AAAA-MM-DD). */
   semana: string;

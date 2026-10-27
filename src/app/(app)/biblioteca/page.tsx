@@ -42,10 +42,17 @@ export default function BibliotecaPage(props: PageProps<"/biblioteca">) {
 
 async function LibraryList({ searchParams }: Pick<PageProps<"/biblioteca">, "searchParams">) {
   const parsed = parseFilters(await searchParams);
-  // A Biblioteca usa só situação e ordenação; a busca completa fica no Explorador.
-  const filters = { ...DEFAULT_FILTERS, status: parsed.status, ordem: parsed.ordem, pagina: parsed.pagina };
-  const { pagina, dataReferencia } = await getRepository().searchAds(filters);
-  const params = filtersToSearchParams({ status: filters.status, ordem: filters.ordem });
+  // A Biblioteca usa só fonte, situação e ordenação; a busca completa fica no Explorador.
+  const filters = {
+    ...DEFAULT_FILTERS,
+    fonte: parsed.fonte,
+    status: parsed.status,
+    ordem: parsed.ordem,
+    pagina: parsed.pagina,
+  };
+  const repo = getRepository();
+  const [{ pagina, dataReferencia }, options] = await Promise.all([repo.searchAds(filters), repo.getFilterOptions()]);
+  const params = filtersToSearchParams({ fonte: filters.fonte, status: filters.status, ordem: filters.ordem });
 
   return (
     <section aria-label="Anúncios" className="space-y-4">
@@ -54,6 +61,14 @@ async function LibraryList({ searchParams }: Pick<PageProps<"/biblioteca">, "sea
           <strong className="text-foreground">{formatNumber(pagina.total)}</strong> anúncios na biblioteca
         </p>
         <Form action="/biblioteca" className="flex flex-wrap items-end gap-2">
+          <Field label="Fonte" htmlFor="b-fonte" className="w-48">
+            <NativeSelect id="b-fonte" name="fonte" defaultValue={filters.fonte}>
+              <option value="">Todas as fontes</option>
+              {options.fontes.map((f) => (
+                <option key={f.id} value={f.id}>{f.nome}</option>
+              ))}
+            </NativeSelect>
+          </Field>
           <Field label="Situação" htmlFor="b-status" className="w-44">
             <NativeSelect id="b-status" name="status" defaultValue={filters.status}>
               <option value="">Ativos e encerrados</option>

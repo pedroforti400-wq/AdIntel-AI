@@ -2,7 +2,7 @@
 
 Aplicação web, em português, para pesquisa de mercado e inteligência competitiva sobre anúncios.
 
-> ⚠️ **Fase atual: 2 — painel, explorador, biblioteca e concorrentes com dados de DEMONSTRAÇÃO.**
+> ⚠️ **Fase atual: 3 — dados de DEMONSTRAÇÃO + importação dos seus próprios arquivos CSV/JSON.**
 > Todos os anúncios, anunciantes, pesquisas e importações exibidos são **fictícios**.
 > Eles **não representam pesquisas reais**, empresas reais nem anúncios veiculados.
 
@@ -49,6 +49,26 @@ Você só precisa ter o **Node.js** instalado (versão 22 ou superior).
 - **Biblioteca** (`/biblioteca`): lista de todos os anúncios e página de detalhes de cada um (`/biblioteca/<id>`), com texto, anunciante, formato, plataformas, datas, situação, fonte, link e disponibilidade de cada campo.
 - **Concorrentes** (`/concorrentes`): lista com estatísticas, perfil individual com histórico semanal e anúncios associados, e comparação de 2 a 4 concorrentes (`/concorrentes/comparar`).
 - Os criativos são sempre **prévias ilustrativas fictícias**. Nenhuma imagem real é usada sem autorização.
+
+**Fase 3**
+- **Importações** (`/importacoes`): envio de arquivos CSV ou JSON (até 2 MB e 5.000 linhas), escolhidos ou arrastados para a página. Depois vêm o mapeamento automático de colunas (ajustável), a pré-visualização com validação linha a linha e o resumo final (novos, atualizados, duplicados e rejeitados).
+- **Deduplicação:** o mesmo anúncio não é cadastrado duas vezes. Ele é reconhecido pelo ID do anúncio ou, se não houver ID, por uma "impressão digital" do anunciante, texto, título, link e data de início (sem diferenciar maiúsculas, acentos ou espaços).
+- Os anúncios importados aparecem no **Explorador** e na **Biblioteca** com o selo **Importado** e o filtro **Fonte dos dados**. O Painel e os Concorrentes continuam somente com os dados de demonstração.
+- Há um modelo de arquivo para baixar em `/modelo-importacao.csv`.
+
+### Onde ficam os anúncios importados
+
+- Ficam no arquivo `.dados-locais/importacoes.json`, **somente neste computador**.
+- Essa pasta está no `.gitignore`: **nunca vai para o GitHub**.
+- Para apagar todos os importados, feche o servidor (`Ctrl + C`) e apague a pasta `.dados-locais`.
+- Na Fase 4, este arquivo será substituído pelo banco de dados (Supabase).
+
+### Segurança da importação
+
+- O conteúdo do arquivo é lido apenas como texto: nada é executado.
+- Tamanho, número de linhas e colunas são limitados. O servidor valida tudo de novo, sem confiar no navegador.
+- Só são aceitos links `http://` e `https://`. Campos ausentes ficam vazios e não são inventados.
+- Imagens e vídeos não são importados.
 - Tema claro e escuro, layout responsivo (computador e celular), telas de carregamento, erro e "não encontrado".
 - Selo **DEMONSTRAÇÃO** em todas as telas.
 
@@ -99,7 +119,7 @@ Na Fase 4, o banco de dados (Supabase) entra **atrás** da pasta `data/repositor
 
 1. ✅ Painel com dados de demonstração
 2. ✅ Telas completas com dados de demonstração (explorar, biblioteca, concorrentes)
-3. Importação CSV/JSON com deduplicação
+3. ✅ Importação CSV/JSON com deduplicação
 4. Banco de dados e login (Supabase)
 5. Analisador com IA (fatos observados separados de hipóteses)
 6. Relatórios em PDF e CSV

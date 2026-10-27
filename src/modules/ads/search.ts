@@ -1,4 +1,4 @@
-import { daysRunning } from "./metrics";
+import { knownDaysRunning } from "./metrics";
 import type { Ad, AdFormat, Advertiser, Platform } from "./types";
 
 /**
@@ -18,13 +18,20 @@ export type SortOption = (typeof SORT_OPTIONS)[number];
 
 export const PAGE_SIZE = 12;
 
+/** Fontes que podem ser escolhidas na busca ("" = todas). */
+export const SOURCE_FILTERS = ["demo", "importacao-arquivo"] as const;
+export type SourceFilter = (typeof SOURCE_FILTERS)[number];
+
 export interface AdFilters {
+  fonte: SourceFilter | "";
   q: string;
   nicho: string;
   anunciante: string;
   plataforma: Platform | "";
   formato: AdFormat | "";
   status: StatusFilter | "";
+  /** Código de país com 2 letras (ex.: BR). */
+  pais: string;
   /** Data de início a partir de (AAAA-MM-DD). */
   de: string;
   /** Data de início até (AAAA-MM-DD). */
@@ -34,12 +41,14 @@ export interface AdFilters {
 }
 
 export const DEFAULT_FILTERS: AdFilters = {
+  fonte: "",
   q: "",
   nicho: "",
   anunciante: "",
   plataforma: "",
   formato: "",
   status: "",
+  pais: "",
   de: "",
   ate: "",
   ordem: "recentes",
@@ -63,13 +72,16 @@ export function parseFilters(raw: RawParams): AdFilters {
   const pagina = Number.parseInt(first(raw.pagina), 10);
   const de = first(raw.de);
   const ate = first(raw.ate);
+  const pais = first(raw.pais).toUpperCase();
   return {
+    fonte: oneOf(first(raw.fonte), SOURCE_FILTERS),
     q: first(raw.q).slice(0, 100),
     nicho: first(raw.nicho),
     anunciante: first(raw.anunciante),
     plataforma: oneOf(first(raw.plataforma), PLATFORMS),
     formato: oneOf(first(raw.formato), FORMATS),
     status: oneOf(first(raw.status), STATUSES),
+    pais: /^[A-Z]{2}$/.test(pais) ? pais : "",
     de: ISO_DATE.test(de) ? de : "",
     ate: ISO_DATE.test(ate) ? ate : "",
     ordem: oneOf(first(raw.ordem), SORT_OPTIONS) || "recentes",
@@ -90,7 +102,7 @@ export function filtersToSearchParams(filters: Partial<AdFilters>): URLSearchPar
 
 /** Quantos filtros (além da ordenação e da página) estão em uso. */
 export function countActiveFilters(filters: AdFilters): number {
-  const keys: (keyof AdFilters)[] = ["q", "nicho", "anunciante", "plataforma", "formato", "status", "de", "ate"];
+  const keys: (keyof AdFilters)[] = ["fonte", "q", "nicho", "anunciante", "plataforma", "formato", "status", "pais", "de", "ate"];
   return keys.filter((k) => filters[k] !== "").length;
 }
 
@@ -104,12 +116,15 @@ export function filterAds(ads: Ad[], advertisers: Map<string, Advertiser>, filte
 
   return ads.filter((ad) => {
     const advertiser = advertisers.get(ad.advertiserId);
+    if (filters.fonte && ad.dataSourceId !== filters.fonte) return false;
     if (filters.anunciante && ad.advertiserId !== filters.anunciante) return false;
     if (filters.nicho && advertiser?.nicho !== filters.nicho) return false;
     if (filters.plataforma && !ad.plataformas.includes(filters.plataforma)) return false;
     if (filters.formato && ad.formato !== filters.formato) return false;
-    if (filters.status === "ativo" && !ad.ativo) return false;
-    if (filters.status === "inativo" && ad.ativo) return false;
+    // Situação desconhecida (null) não entra em "ativos" nem em "encerrados".
+    if (filters.status === "ativo" && ad.ativo !== true) return false;
+    if (filters.status === "inativo" && ad.ativo !== false) return false;
+    if (filters.pais && !ad.paises.includes(filters.pais)) return false;
     if (filters.de && (!ad.dataInicio || ad.dataInicio < filters.de)) return false;
     if (filters.ate && (!ad.dataInicio || ad.dataInicio > filters.ate)) return false;
 
@@ -128,7 +143,9 @@ export function sortAds(
   ads: Ad[],
   advertisers: Map<string, Advertiser>,
   ordem: SortOption,
-  referenceDate: string,
+  // Mantido por compatibilidade; o tempo no ar agora usa as datas do próprio anúncio.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  referenceDate?: string,
 ): Ad[] {
   const sorted = [...ads];
   const byId = (a: Ad, b: Ad) => a.id.localeCompare(b.id);
@@ -139,7 +156,7 @@ export function sortAds(
       return sorted.sort((a, b) => (a.dataInicio ?? "").localeCompare(b.dataInicio ?? "") || byId(a, b));
     case "mais_tempo_no_ar":
       return sorted.sort(
-        (a, b) => (daysRunning(b, referenceDate) ?? 0) - (daysRunning(a, referenceDate) ?? 0) || byId(a, b),
+        (a, b) => (knownDaysRunning(b) ?? -1) - (knownDaysRunning(a) ?? -1) || byId(a, b),
       );
     case "anunciante":
       return sorted.sort(

@@ -34,11 +34,13 @@ export const PROVIDERS: ProviderInfo[] = [
     nome: "Importação assistida (CSV/JSON)",
     descricao:
       "Você envia um arquivo com anúncios que tem autorização para usar. O sistema mapeia as colunas, valida, remove duplicados e registra a origem.",
-    status: "planejado",
+    status: "ativo",
     fase: "Fase 3",
     limitacoes: [
       "Os campos disponíveis dependem do conteúdo de cada arquivo.",
       "Você é responsável por ter direito de uso sobre os dados enviados.",
+      "Nesta fase, os anúncios importados ficam guardados somente neste computador (pasta .dados-locais).",
+      "Imagens e vídeos (criativos) não são importados.",
     ],
     capacidades: {
       filtros: ["palavra_chave", "anunciante", "nicho", "plataforma", "status", "periodo", "formato", "pais"],

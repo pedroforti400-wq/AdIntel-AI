@@ -41,7 +41,9 @@ function competitorForAdvertiser(advertiserId: string): Competitor | undefined {
   return demoCompetitors.find((c) => c.advertiserIds.includes(advertiserId));
 }
 
-function toView(ad: Ad): AdView {
+export { advertisersById as demoAdvertisersById };
+
+export function toView(ad: Ad): AdView {
   return {
     anuncio: ad,
     anunciante: advertisersById.get(ad.advertiserId) as Advertiser,
@@ -126,7 +128,9 @@ export const demoRepository: Repository = {
       anunciantes: demoAdvertisers
         .map((a) => ({ id: a.id, nome: a.nome }))
         .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")),
+      paises: [...new Set(demoAds.flatMap((ad) => ad.paises))].sort(),
       fonte: demoSource,
+      fontes: [demoSource],
     };
   },
 

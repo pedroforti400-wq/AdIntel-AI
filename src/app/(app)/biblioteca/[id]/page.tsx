@@ -7,15 +7,14 @@ import { ArrowLeft, ExternalLink, Info } from "lucide-react";
 import { AdStatusBadge } from "@/components/ads/ad-status-badge";
 import { CreativePlaceholder } from "@/components/ads/creative-placeholder";
 import { FieldAvailabilityList } from "@/components/ads/field-availability";
-import { DemoBadge } from "@/components/layout/demo-badge";
+import { SourceBadge } from "@/components/ads/source-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getRepository } from "@/data/repositories";
 import type { AdView } from "@/data/repositories/types";
-import { daysRunning } from "@/modules/ads/metrics";
-import { DEMO_REFERENCE_DATE } from "@/data/demo/seed";
+import { knownDaysRunning } from "@/modules/ads/metrics";
 import { FORMAT_LABELS, PLATFORM_LABELS, formatDate, formatDays } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Detalhes do anúncio" };
@@ -62,7 +61,7 @@ function Unavailable({ children = "Não disponível nesta fonte" }: { children?:
 
 function AdDetailContent({ view }: { view: AdView }) {
   const { anuncio, anunciante, fonte, concorrenteId } = view;
-  const dias = daysRunning(anuncio, DEMO_REFERENCE_DATE);
+  const dias = knownDaysRunning(anuncio);
 
   return (
     <>
@@ -75,7 +74,7 @@ function AdDetailContent({ view }: { view: AdView }) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <AdStatusBadge ativo={anuncio.ativo} />
-          {anuncio.isDemo && <DemoBadge />}
+          <SourceBadge ad={anuncio} />
         </div>
       </div>
 
@@ -148,11 +147,19 @@ function AdDetailContent({ view }: { view: AdView }) {
                   {anuncio.dataInicio ? formatDate(anuncio.dataInicio) : <Unavailable />}
                 </InfoRow>
                 <InfoRow label="Situação conhecida">
-                  {anuncio.ativo
-                    ? `Ativo na última coleta (${formatDate(anuncio.ultimaColeta)})`
-                    : anuncio.dataFim
-                      ? `Encerrado em ${formatDate(anuncio.dataFim)}`
-                      : "Encerrado (data não informada)"}
+                  {anuncio.ativo === null ? (
+                    anuncio.dataFim ? (
+                      `Encerramento informado: ${formatDate(anuncio.dataFim)}`
+                    ) : (
+                      <Unavailable>Não informada pela fonte</Unavailable>
+                    )
+                  ) : anuncio.ativo ? (
+                    `Ativo na última coleta (${formatDate(anuncio.ultimaColeta)})`
+                  ) : anuncio.dataFim ? (
+                    `Encerrado em ${formatDate(anuncio.dataFim)}`
+                  ) : (
+                    "Encerrado (data não informada)"
+                  )}
                 </InfoRow>
                 <InfoRow label="Tempo no ar">{dias !== null ? formatDays(dias) : <Unavailable />}</InfoRow>
                 <InfoRow label="Países">{anuncio.paises.length > 0 ? anuncio.paises.join(", ") : <Unavailable />}</InfoRow>
@@ -183,9 +190,14 @@ function AdDetailContent({ view }: { view: AdView }) {
                 <InfoRow label="Fonte">
                   <Link href="/fontes" className="text-primary hover:underline">{fonte.nome}</Link>
                 </InfoRow>
+                {anuncio.origemArquivo && <InfoRow label="Arquivo de origem">{anuncio.origemArquivo}</InfoRow>}
                 <InfoRow label="ID na fonte">{anuncio.externalId ?? <Unavailable />}</InfoRow>
-                <InfoRow label="Primeira coleta">{formatDate(anuncio.primeiraColeta)}</InfoRow>
-                <InfoRow label="Última coleta">{formatDate(anuncio.ultimaColeta)}</InfoRow>
+                <InfoRow label={anuncio.isDemo ? "Primeira coleta" : "Primeira importação"}>
+                  {formatDate(anuncio.primeiraColeta)}
+                </InfoRow>
+                <InfoRow label={anuncio.isDemo ? "Última coleta" : "Última importação"}>
+                  {formatDate(anuncio.ultimaColeta)}
+                </InfoRow>
               </dl>
             </CardContent>
           </Card>

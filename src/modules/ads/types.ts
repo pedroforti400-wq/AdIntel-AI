@@ -68,13 +68,16 @@ export interface Ad {
   /** Datas em ISO 8601 (AAAA-MM-DD). */
   dataInicio: string | null;
   dataFim: string | null;
-  ativo: boolean;
+  /** Situação na última coleta. `null` quando a fonte não informou (não inventamos). */
+  ativo: boolean | null;
   /** Só guardamos/exibimos o criativo quando há autorização. */
   criativoAutorizado: boolean;
   criativoUrl: string | null;
   disponibilidadeCampos: FieldAvailability;
   primeiraColeta: string;
   ultimaColeta: string;
+  /** Nome do arquivo de onde o anúncio veio (somente anúncios importados). */
+  origemArquivo?: string | null;
   isDemo: boolean;
 }
 

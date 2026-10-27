@@ -34,6 +34,9 @@ yarn-error.log*
 .env*
 !.env.example
 
+# anúncios importados pelo usuário (dados locais, nunca vão para o GitHub)
+/.dados-locais/
+
 # configurações pessoais do Claude Code
 .claude/settings.local.json
 

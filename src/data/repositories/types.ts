@@ -1,6 +1,6 @@
 import type { Ad, Advertiser, AdFormat, ImportRun, Platform, Search } from "@/modules/ads/types";
 import type { BreakdownItem, WeeklyPoint } from "@/modules/ads/metrics";
-import type { AdFilters, Page } from "@/modules/ads/search";
+import type { AdFilters, Page, SourceFilter } from "@/modules/ads/search";
 import type { CompetitorHistory, CompetitorSummary } from "@/modules/competitors/stats";
 import type { ProviderInfo } from "@/modules/providers/types";
 
@@ -64,8 +64,11 @@ export interface SearchResult {
 export interface FilterOptions {
   nichos: string[];
   anunciantes: { id: string; nome: string }[];
-  /** Fonte usada na busca e o que ela suporta. */
+  paises: string[];
+  /** Fonte usada na busca e o que ela suporta (ou a combinação das fontes, quando "todas"). */
   fonte: ProviderInfo;
+  /** Fontes ativas que podem ser escolhidas. */
+  fontes: ProviderInfo[];
 }
 
 export interface CompetitorProfile extends CompetitorSummary {
@@ -77,7 +80,7 @@ export interface CompetitorProfile extends CompetitorSummary {
 export interface Repository {
   getDashboard(): Promise<DashboardData>;
   searchAds(filters: AdFilters): Promise<SearchResult>;
-  getFilterOptions(): Promise<FilterOptions>;
+  getFilterOptions(fonte?: SourceFilter | ""): Promise<FilterOptions>;
   getAd(id: string): Promise<AdView | null>;
   listAdIds(): Promise<string[]>;
   listCompetitors(): Promise<CompetitorSummary[]>;

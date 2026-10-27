@@ -26,7 +26,8 @@ export function DemoBanner() {
     >
       <DemoBadge />
       <span>
-        Os dados exibidos são <strong>fictícios</strong> e não representam pesquisas reais, empresas reais ou anúncios veiculados.
+        Os dados marcados como demonstração são <strong>fictícios</strong> e não representam pesquisas reais, empresas
+        reais ou anúncios veiculados. Anúncios que você importar aparecem com o selo <strong>Importado</strong>.
       </span>
     </div>
   );
