@@ -1,21 +1,87 @@
 import type { Metadata } from "next";
+import Form from "next/form";
+import Link from "next/link";
+import { Suspense } from "react";
+import { Search } from "lucide-react";
 
-import { PlaceholderPage } from "@/components/shared/placeholder-page";
+import { AdGrid, AdGridSkeleton } from "@/components/ads/ad-grid";
+import { Pagination } from "@/components/ads/pagination";
+import { DemoBadge } from "@/components/layout/demo-badge";
+import { Field, NativeSelect } from "@/components/shared/native-select";
+import { PageHeader } from "@/components/shared/page-header";
+import { Button } from "@/components/ui/button";
+import { getRepository } from "@/data/repositories";
+import { DEFAULT_FILTERS, SORT_OPTIONS, filtersToSearchParams, parseFilters } from "@/modules/ads/search";
+import { SORT_LABELS, formatNumber } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Biblioteca" };
 
-export default function BibliotecaPage() {
+export default function BibliotecaPage(props: PageProps<"/biblioteca">) {
   return (
-    <PlaceholderPage
-      titulo="Biblioteca de anúncios"
-      descricao="Todos os anúncios coletados, com origem e histórico."
-      fase="Fase 2"
-      recursos={[
-        "Cartões com texto, título, CTA, link, datas e plataformas.",
-        "Criativos exibidos somente quando houver autorização.",
-        "Origem dos dados e campos indisponíveis sinalizados em cada anúncio.",
-        "Histórico de observações de cada anúncio ao longo do tempo.",
-      ]}
-    />
+    <div className="space-y-6">
+      <PageHeader
+        titulo="Biblioteca de anúncios"
+        descricao="Todos os anúncios coletados, com anunciante, formato, plataformas, datas e origem dos dados."
+        acoes={
+          <>
+            <DemoBadge />
+            <Button asChild variant="outline" size="sm">
+              <Link href="/explorar">
+                <Search /> Pesquisa avançada
+              </Link>
+            </Button>
+          </>
+        }
+      />
+      <Suspense fallback={<AdGridSkeleton />}>
+        <LibraryList searchParams={props.searchParams} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function LibraryList({ searchParams }: Pick<PageProps<"/biblioteca">, "searchParams">) {
+  const parsed = parseFilters(await searchParams);
+  // A Biblioteca usa só situação e ordenação; a busca completa fica no Explorador.
+  const filters = { ...DEFAULT_FILTERS, status: parsed.status, ordem: parsed.ordem, pagina: parsed.pagina };
+  const { pagina, dataReferencia } = await getRepository().searchAds(filters);
+  const params = filtersToSearchParams({ status: filters.status, ordem: filters.ordem });
+
+  return (
+    <section aria-label="Anúncios" className="space-y-4">
+      <div key={params.toString()} className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <p className="text-sm text-muted-foreground">
+          <strong className="text-foreground">{formatNumber(pagina.total)}</strong> anúncios na biblioteca
+        </p>
+        <Form action="/biblioteca" className="flex flex-wrap items-end gap-2">
+          <Field label="Situação" htmlFor="b-status" className="w-44">
+            <NativeSelect id="b-status" name="status" defaultValue={filters.status}>
+              <option value="">Ativos e encerrados</option>
+              <option value="ativo">Somente ativos</option>
+              <option value="inativo">Somente encerrados</option>
+            </NativeSelect>
+          </Field>
+          <Field label="Ordenar por" htmlFor="b-ordem" className="w-48">
+            <NativeSelect id="b-ordem" name="ordem" defaultValue={filters.ordem}>
+              {SORT_OPTIONS.map((o) => (
+                <option key={o} value={o}>{SORT_LABELS[o]}</option>
+              ))}
+            </NativeSelect>
+          </Field>
+          <Button type="submit" variant="secondary">Aplicar</Button>
+        </Form>
+      </div>
+
+      <AdGrid
+        views={pagina.itens}
+        dataReferencia={dataReferencia}
+        vazio={{
+          titulo: "Nenhum anúncio na biblioteca",
+          descricao: "Quando houver anúncios coletados ou importados, eles aparecerão aqui.",
+        }}
+      />
+
+      <Pagination basePath="/biblioteca" params={params} pagina={pagina.pagina} totalPaginas={pagina.totalPaginas} />
+    </section>
   );
 }

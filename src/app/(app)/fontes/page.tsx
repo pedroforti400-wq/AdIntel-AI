@@ -27,6 +27,8 @@ const FILTER_LABELS: Record<SearchFilter, string> = {
   pais: "País",
 };
 
+const ALL_FILTERS = Object.keys(FILTER_LABELS) as SearchFilter[];
+
 export default function FontesPage() {
   return (
     <div className="space-y-6">
@@ -40,6 +42,10 @@ export default function FontesPage() {
           <Info className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
           <div className="space-y-1">
             <p className="font-medium">Nesta fase, somente dados de demonstração estão ativos.</p>
+            <p className="text-muted-foreground">
+              O Explorador consulta os filtros suportados pela fonte ativa: filtros não suportados aparecem
+              desabilitados, com explicação.
+            </p>
             <p className="text-muted-foreground">
               Eles <strong>não representam pesquisas reais</strong>. Antes de qualquer integração, será preciso validar
               uma fonte autorizada para anúncios comerciais brasileiros. O AdIntel AI não faz coleta automatizada
@@ -97,6 +103,23 @@ export default function FontesPage() {
                     <p className="text-xs text-muted-foreground">A definir.</p>
                   )}
                 </div>
+
+                {p.capacidades.filtros.length > 0 && (
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground">Filtros não suportados</p>
+                    {ALL_FILTERS.some((f) => !p.capacidades.filtros.includes(f)) ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {ALL_FILTERS.filter((f) => !p.capacidades.filtros.includes(f)).map((f) => (
+                          <Badge key={f} variant="outline" className="font-normal text-muted-foreground line-through">
+                            {FILTER_LABELS[f]}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Nenhum: todos os filtros são suportados.</p>
+                    )}
+                  </div>
+                )}
 
                 <div className="space-y-1.5">
                   <p className="text-xs font-medium text-muted-foreground">Limitações conhecidas</p>

@@ -1,4 +1,8 @@
-import type { AdFormat, ImportRun, Platform, Search } from "@/modules/ads/types";
+import type { Ad, Advertiser, AdFormat, ImportRun, Platform, Search } from "@/modules/ads/types";
+import type { BreakdownItem, WeeklyPoint } from "@/modules/ads/metrics";
+import type { AdFilters, Page } from "@/modules/ads/search";
+import type { CompetitorHistory, CompetitorSummary } from "@/modules/competitors/stats";
+import type { ProviderInfo } from "@/modules/providers/types";
 
 /**
  * "Porta única" de acesso aos dados.
@@ -8,6 +12,8 @@ import type { AdFormat, ImportRun, Platform, Search } from "@/modules/ads/types"
  * Supabase, sem precisar mudar as telas.
  */
 
+export type { BreakdownItem, WeeklyPoint };
+
 export interface DashboardKpis {
   totalAnuncios: number;
   anunciosAtivos: number;
@@ -16,18 +22,6 @@ export interface DashboardKpis {
   pesquisasSalvas: number;
   novosUltimos7Dias: number;
   novosSemanaAnterior: number;
-}
-
-export interface WeeklyPoint {
-  /** Início da semana (AAAA-MM-DD). */
-  semana: string;
-  novos: number;
-  ativos: number;
-}
-
-export interface BreakdownItem<K extends string> {
-  chave: K;
-  total: number;
 }
 
 export interface CompetitorRow {
@@ -53,6 +47,41 @@ export interface DashboardData {
   importacoesRecentes: ImportRun[];
 }
 
+/** Anúncio acompanhado do anunciante e da fonte, pronto para exibição. */
+export interface AdView {
+  anuncio: Ad;
+  anunciante: Advertiser;
+  fonte: ProviderInfo;
+  /** Concorrente cadastrado ligado a este anunciante, se houver. */
+  concorrenteId: string | null;
+}
+
+export interface SearchResult {
+  dataReferencia: string;
+  pagina: Page<AdView>;
+}
+
+export interface FilterOptions {
+  nichos: string[];
+  anunciantes: { id: string; nome: string }[];
+  /** Fonte usada na busca e o que ela suporta. */
+  fonte: ProviderInfo;
+}
+
+export interface CompetitorProfile extends CompetitorSummary {
+  historico: CompetitorHistory;
+  anuncios: AdView[];
+  dataReferencia: string;
+}
+
 export interface Repository {
   getDashboard(): Promise<DashboardData>;
+  searchAds(filters: AdFilters): Promise<SearchResult>;
+  getFilterOptions(): Promise<FilterOptions>;
+  getAd(id: string): Promise<AdView | null>;
+  listAdIds(): Promise<string[]>;
+  listCompetitors(): Promise<CompetitorSummary[]>;
+  getCompetitor(id: string): Promise<CompetitorProfile | null>;
+  /** Perfis na mesma ordem dos IDs; IDs desconhecidos são ignorados. */
+  getCompetitors(ids: string[]): Promise<CompetitorProfile[]>;
 }

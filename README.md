@@ -2,7 +2,7 @@
 
 Aplicação web, em português, para pesquisa de mercado e inteligência competitiva sobre anúncios.
 
-> ⚠️ **Fase atual: 1 — painel com dados de DEMONSTRAÇÃO.**
+> ⚠️ **Fase atual: 2 — painel, explorador, biblioteca e concorrentes com dados de DEMONSTRAÇÃO.**
 > Todos os anúncios, anunciantes, pesquisas e importações exibidos são **fictícios**.
 > Eles **não representam pesquisas reais**, empresas reais nem anúncios veiculados.
 
@@ -37,11 +37,18 @@ Você só precisa ter o **Node.js** instalado (versão 22 ou superior).
 | `npm run typecheck` | Confere se os tipos do TypeScript estão corretos |
 | `npm run build` | Gera a versão otimizada para publicação |
 
-## O que já existe (Fase 1)
+## O que já existe
 
+**Fase 1**
 - **Painel** com indicadores, evolução semanal, plataformas, formatos, concorrentes, pesquisas e importações recentes.
 - **Barra lateral** com todas as seções planejadas. As seções ainda não construídas mostram o que vão oferecer e em qual fase.
-- **Fontes de dados**: explica de onde vêm os dados e as limitações de cada fonte.
+- **Fontes de dados**: explica de onde vêm os dados, as limitações de cada fonte e quais filtros cada uma suporta.
+
+**Fase 2**
+- **Explorar anúncios** (`/explorar`): palavras-chave (sem diferenciar acentos), filtros de nicho, anunciante, plataforma, formato, situação e período, que podem ser combinados, além de ordenação e paginação. Filtros que a fonte não suporta aparecem desabilitados.
+- **Biblioteca** (`/biblioteca`): lista de todos os anúncios e página de detalhes de cada um (`/biblioteca/<id>`), com texto, anunciante, formato, plataformas, datas, situação, fonte, link e disponibilidade de cada campo.
+- **Concorrentes** (`/concorrentes`): lista com estatísticas, perfil individual com histórico semanal e anúncios associados, e comparação de 2 a 4 concorrentes (`/concorrentes/comparar`).
+- Os criativos são sempre **prévias ilustrativas fictícias**. Nenhuma imagem real é usada sem autorização.
 - Tema claro e escuro, layout responsivo (computador e celular), telas de carregamento, erro e "não encontrado".
 - Selo **DEMONSTRAÇÃO** em todas as telas.
 
@@ -91,7 +98,7 @@ Na Fase 4, o banco de dados (Supabase) entra **atrás** da pasta `data/repositor
 ## Roadmap
 
 1. ✅ Painel com dados de demonstração
-2. Telas completas com dados de demonstração (explorar, biblioteca, concorrentes)
+2. ✅ Telas completas com dados de demonstração (explorar, biblioteca, concorrentes)
 3. Importação CSV/JSON com deduplicação
 4. Banco de dados e login (Supabase)
 5. Analisador com IA (fatos observados separados de hipóteses)

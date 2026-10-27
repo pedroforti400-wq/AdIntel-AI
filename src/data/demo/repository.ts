@@ -1,14 +1,29 @@
-import type { Ad, AdFormat, Platform } from "@/modules/ads/types";
+import type { Ad, AdFormat, Advertiser, Competitor, Platform } from "@/modules/ads/types";
 import type {
-  BreakdownItem,
+  AdView,
+  CompetitorProfile,
   CompetitorRow,
   DashboardData,
   Repository,
-  WeeklyPoint,
 } from "@/data/repositories/types";
 import {
-  DEMO_REFERENCE_DATE,
   addDays,
+  buildBreakdown,
+  buildWeeklySeries,
+  countNewBetween,
+  isActiveOn,
+} from "@/modules/ads/metrics";
+import { filterAds, paginate, sortAds } from "@/modules/ads/search";
+import {
+  computeCompetitorHistory,
+  computeCompetitorStats,
+  type CompetitorSummary,
+} from "@/modules/competitors/stats";
+import { getProviderInfo } from "@/modules/providers/registry";
+import type { ProviderInfo } from "@/modules/providers/types";
+import {
+  DEMO_REFERENCE_DATE,
+  DEMO_SOURCE_ID,
   demoAds,
   demoAdvertisers,
   demoCompetitors,
@@ -16,47 +31,33 @@ import {
   demoSearches,
 } from "./seed";
 
-/** Um anúncio está ativo numa data se já começou e ainda não terminou. */
-export function isActiveOn(ad: Ad, date: string): boolean {
-  if (!ad.dataInicio || ad.dataInicio > date) return false;
-  return ad.dataFim === null || ad.dataFim >= date;
+// Mantidos aqui por compatibilidade: os cálculos agora vivem em "@/modules/ads/metrics".
+export { buildBreakdown, buildWeeklySeries, countNewBetween, isActiveOn };
+
+const advertisersById = new Map<string, Advertiser>(demoAdvertisers.map((a) => [a.id, a]));
+const demoSource = getProviderInfo(DEMO_SOURCE_ID) as ProviderInfo;
+
+function competitorForAdvertiser(advertiserId: string): Competitor | undefined {
+  return demoCompetitors.find((c) => c.advertiserIds.includes(advertiserId));
 }
 
-export function countNewBetween(ads: Ad[], from: string, to: string): number {
-  return ads.filter((ad) => ad.dataInicio !== null && ad.dataInicio > from && ad.dataInicio <= to).length;
+function toView(ad: Ad): AdView {
+  return {
+    anuncio: ad,
+    anunciante: advertisersById.get(ad.advertiserId) as Advertiser,
+    fonte: getProviderInfo(ad.dataSourceId) ?? demoSource,
+    concorrenteId: competitorForAdvertiser(ad.advertiserId)?.id ?? null,
+  };
 }
 
-export function buildWeeklySeries(ads: Ad[], referenceDate: string, weeks: number): WeeklyPoint[] {
-  const points: WeeklyPoint[] = [];
-  for (let w = weeks - 1; w >= 0; w--) {
-    const weekEnd = addDays(referenceDate, -7 * w);
-    const weekStart = addDays(weekEnd, -6);
-    points.push({
-      semana: weekStart,
-      novos: countNewBetween(ads, addDays(weekStart, -1), weekEnd),
-      ativos: ads.filter((ad) => isActiveOn(ad, weekEnd)).length,
-    });
-  }
-  return points;
-}
-
-export function buildBreakdown<K extends string>(
-  ads: Ad[],
-  keysOf: (ad: Ad) => K[],
-): BreakdownItem<K>[] {
-  const totals = new Map<K, number>();
-  for (const ad of ads) {
-    for (const key of keysOf(ad)) totals.set(key, (totals.get(key) ?? 0) + 1);
-  }
-  return [...totals.entries()]
-    .map(([chave, total]) => ({ chave, total }))
-    .sort((a, b) => b.total - a.total);
+function adsOf(competitor: Competitor): Ad[] {
+  return demoAds.filter((ad) => competitor.advertiserIds.includes(ad.advertiserId));
 }
 
 function buildCompetitorRows(referenceDate: string): CompetitorRow[] {
   const previousDate = addDays(referenceDate, -28);
   return demoCompetitors.map((competitor) => {
-    const ads = demoAds.filter((ad) => competitor.advertiserIds.includes(ad.advertiserId));
+    const ads = adsOf(competitor);
     return {
       id: competitor.id,
       nome: competitor.nome,
@@ -67,6 +68,20 @@ function buildCompetitorRows(referenceDate: string): CompetitorRow[] {
       ultimaColeta: ads.length > 0 ? ads[0].ultimaColeta : null,
     };
   });
+}
+
+function summaryOf(competitor: Competitor): CompetitorSummary {
+  return { concorrente: competitor, estatisticas: computeCompetitorStats(adsOf(competitor), DEMO_REFERENCE_DATE) };
+}
+
+function profileOf(competitor: Competitor): CompetitorProfile {
+  const ads = adsOf(competitor);
+  return {
+    ...summaryOf(competitor),
+    historico: computeCompetitorHistory(ads, DEMO_REFERENCE_DATE),
+    anuncios: sortAds(ads, advertisersById, "recentes", DEMO_REFERENCE_DATE).map(toView),
+    dataReferencia: DEMO_REFERENCE_DATE,
+  };
 }
 
 export const demoRepository: Repository = {
@@ -94,4 +109,51 @@ export const demoRepository: Repository = {
       importacoesRecentes: demoImportRuns,
     };
   },
+
+  async searchAds(filters) {
+    const filtered = filterAds(demoAds, advertisersById, filters);
+    const sorted = sortAds(filtered, advertisersById, filters.ordem, DEMO_REFERENCE_DATE);
+    const page = paginate(sorted, filters.pagina);
+    return {
+      dataReferencia: DEMO_REFERENCE_DATE,
+      pagina: { ...page, itens: page.itens.map(toView) },
+    };
+  },
+
+  async getFilterOptions() {
+    return {
+      nichos: [...new Set(demoAdvertisers.map((a) => a.nicho))].sort((a, b) => a.localeCompare(b, "pt-BR")),
+      anunciantes: demoAdvertisers
+        .map((a) => ({ id: a.id, nome: a.nome }))
+        .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")),
+      fonte: demoSource,
+    };
+  },
+
+  async getAd(id) {
+    const ad = demoAds.find((a) => a.id === id);
+    return ad ? toView(ad) : null;
+  },
+
+  async listAdIds() {
+    return demoAds.map((ad) => ad.id);
+  },
+
+  async listCompetitors() {
+    return demoCompetitors.map(summaryOf);
+  },
+
+  async getCompetitor(id) {
+    const competitor = demoCompetitors.find((c) => c.id === id);
+    return competitor ? profileOf(competitor) : null;
+  },
+
+  async getCompetitors(ids) {
+    return ids
+      .map((id) => demoCompetitors.find((c) => c.id === id))
+      .filter((c): c is Competitor => c !== undefined)
+      .map(profileOf);
+  },
 };
+
+export { DEMO_REFERENCE_DATE };

@@ -1,4 +1,5 @@
-import type { AdFormat, ImportRunStatus, Platform } from "@/modules/ads/types";
+import type { AdField, AdFormat, FieldStatus, ImportRunStatus, Platform } from "@/modules/ads/types";
+import type { SortOption } from "@/modules/ads/search";
 
 /**
  * Formatação em português do Brasil. Locale e fuso são fixos para que o
@@ -55,6 +56,35 @@ export const FORMAT_LABELS: Record<AdFormat, string> = {
   carrossel: "Carrossel",
   texto: "Texto",
 };
+
+export const SORT_LABELS: Record<SortOption, string> = {
+  recentes: "Início mais recente",
+  antigos: "Início mais antigo",
+  mais_tempo_no_ar: "Mais tempo no ar",
+  anunciante: "Anunciante (A–Z)",
+};
+
+export const FIELD_LABELS: Record<AdField, string> = {
+  texto: "Texto do anúncio",
+  titulo: "Título",
+  cta: "Chamada para ação (CTA)",
+  link_destino: "Link de destino",
+  formato: "Formato",
+  plataformas: "Plataformas",
+  data_inicio: "Data de início",
+  data_fim: "Data de encerramento",
+  criativo: "Criativo (imagem/vídeo)",
+};
+
+export const FIELD_STATUS_LABELS: Record<FieldStatus, string> = {
+  disponivel: "Disponível",
+  nao_fornecido_pela_fonte: "Não fornecido pela fonte",
+  vazio: "Sem valor informado",
+};
+
+export function formatDays(days: number): string {
+  return `${formatNumber(days)} ${days === 1 ? "dia" : "dias"}`;
+}
 
 export const IMPORT_STATUS_LABELS: Record<ImportRunStatus, string> = {
   concluida: "Concluída",

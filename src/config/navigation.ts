@@ -34,9 +34,9 @@ export const NAVIGATION: NavGroup[] = [
   {
     titulo: "Pesquisa",
     itens: [
-      { titulo: "Explorar anúncios", href: "/explorar", icone: Search, emBreve: true },
-      { titulo: "Biblioteca", href: "/biblioteca", icone: Library, emBreve: true },
-      { titulo: "Concorrentes", href: "/concorrentes", icone: Building2, emBreve: true },
+      { titulo: "Explorar anúncios", href: "/explorar", icone: Search },
+      { titulo: "Biblioteca", href: "/biblioteca", icone: Library },
+      { titulo: "Concorrentes", href: "/concorrentes", icone: Building2 },
     ],
   },
   {
